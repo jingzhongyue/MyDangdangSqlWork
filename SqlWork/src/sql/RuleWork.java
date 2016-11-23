@@ -7,9 +7,9 @@ import java.util.Scanner;
 
 public class RuleWork {
 
-    public static String sqlFileName = "mymq2.4.sql";
+    public static String sqlFileName = "careateTable.sql";
 
-    public static String newSqlFileName = "mymq2.4-new.sql";
+    public static String newSqlFileName = "careateTable-new.sql";
 
     public static String urlPath = "sql/";
 
