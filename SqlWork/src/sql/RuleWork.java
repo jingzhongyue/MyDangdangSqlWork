@@ -5,15 +5,7 @@ import java.io.IOException;
 import java.util.Scanner;
 
 
-public class RuleWork {
-
-    public static String sqlFileName = "careateTable.sql";
-
-    public static String newSqlFileName = "careateTable-new.sql";
-
-    public static String urlPath = "sql/";
-
-    public static String propertiesName = "rule.properties";
+public class RuleWork implements ConfigureBean {
 
     // ////////
 

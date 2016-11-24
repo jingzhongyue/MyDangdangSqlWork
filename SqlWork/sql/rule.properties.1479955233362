@@ -5,5 +5,4 @@ table=1
 table0.name=open_console_url
 table0.candrop=true
 table0.rule=0-3
-table0.split=_
-table0.discardoriginal=2
+table0_=_
