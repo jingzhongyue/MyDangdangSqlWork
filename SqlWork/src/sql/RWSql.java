@@ -31,7 +31,9 @@ public class RWSql {
     public static String tbaleName = ".name";
     public static String tbaleCandrop = ".candrop";
     public static String tbaleRule = ".rule";
-    public static String tbaleSplit = "_";
+    public static String tbaleSplit = ".split";
+    public static String discardOriginal = ".discardoriginal";// 是否删除原版 0:否 1:是
+                                                              // 2:有分表的情况丢弃
 
 
     public void readMakeProperties(String sqlPath, String propertiesUrl) throws IOException {
@@ -92,6 +94,7 @@ public class RWSql {
             sb.append((table + i + tbaleCandrop) + "=" + "true" + "\n");
             sb.append((table + i + tbaleRule) + "=" + "0-3" + "\n");
             sb.append((table + i + tbaleSplit) + "=" + "_" + "\n");
+            sb.append((table + i + discardOriginal) + "=" + "2" + "\n");
         }
 
         oFile.write(sb.toString().getBytes("utf-8"));
@@ -178,8 +181,10 @@ public class RWSql {
             String tbaleCandropStr = properties.get(table + i + tbaleCandrop).toString();
             String tbaleRuleStr = properties.get(table + i + tbaleRule).toString();
             String tbaleSplitStr = properties.get(table + i + tbaleSplit).toString();
+            String discardOriginalStr = properties.get(table + i + discardOriginal).toString();
 
-            tableEndSql.append(fx(tbaleNameStr, tbaleCandropStr, tbaleRuleStr, tbaleSplitStr, sqlMap));
+            tableEndSql.append(fx(tbaleNameStr, tbaleCandropStr, tbaleRuleStr, tbaleSplitStr,
+                discardOriginalStr, sqlMap));
 
         }
 
@@ -207,23 +212,47 @@ public class RWSql {
 
 
     private String fx(String tableName, String tbaleCandrop, String tbaleRule, String tbaleSplit,
-            Map<String, String> sqlMap) {
+            String discardOriginalStr, Map<String, String> sqlMap) {
 
         StringBuffer sb = new StringBuffer();
+        boolean tbalecandrop = (tbaleCandrop != null && tbaleCandrop.equals("true"));
+
+        int isDiscardOriginal = 2;
+
+        if (discardOriginalStr != null && discardOriginalStr.length() > 0) {
+            isDiscardOriginal = Integer.parseInt(discardOriginalStr);
+        }
 
         sb.append("/******************** Add Table: " + tableName + " S ************************/\n");
 
         String tableAllSql = sqlMap.get(tableName);
 
-        if (tbaleRule == null || tbaleRule.length() == 0 || tbaleRule.indexOf("-") == -1) {
-            sb.append(tableAllSql);
-        } else {
+        if (isDiscardOriginal == 0) {// 是否删除原版
+            if (tbalecandrop) {
+                sb.append("DROP TABLE IF EXISTS `" + tableName + "`;\n");
+            }
+            sb.append("CREATE TABLE " + tableName + "\n");
 
+            sb.append(tableAllSql + "\n");
+        }
+
+        if (tbaleRule == null || tbaleRule.length() == 0 || tbaleRule.indexOf("-") == -1) {
+
+            if (isDiscardOriginal == 2) {// 是否删除原版
+                // --没有规则的原版输出
+                if (tbalecandrop) {
+                    sb.append("DROP TABLE IF EXISTS `" + tableName + "`;\n");
+                }
+                sb.append("CREATE TABLE " + tableName + "\n");
+
+                sb.append(tableAllSql + "\n");
+            }
+
+        } else {
+            // --有规则的规则输出－原版丢弃
             String[] split = tbaleRule.split("-");
             int startIndex = Integer.parseInt(split[0]);
             int endIndex = Integer.parseInt(split[1]);
-
-            boolean tbalecandrop = (tbaleCandrop != null && tbaleCandrop.equals("true"));
 
             for (int i = startIndex; i <= endIndex; i++) {
 
